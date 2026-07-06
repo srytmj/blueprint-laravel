@@ -1,174 +1,66 @@
-# Project Blueprint
+#!/bin/bash
 
-Starter template untuk Laravel 11 dengan AI-assisted workflow via Claude Code.
+# =============================================================
+# sync.sh - Sync stack info from SRS/PRD into CLAUDE.md
+# Usage: bash sync.sh
+# Run after PM session updates docs/SRS.md or docs/PRD.md
+# =============================================================
 
-Include deploy automation, structured PM/DEV/QA agent sessions, dan documentation templates.
+set -euo pipefail
 
----
+SRS_FILE="docs/SRS.md"
+PRD_FILE="docs/PRD.md"
+CLAUDE_MD=".claude/CLAUDE.md"
+LOG_FILE="logs/sync.log"
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
-## Folder Structure
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-```
-project/
-├── code/                        # Laravel 11 source code
-├── scripts/
-│   ├── update.sh                # Force pull latest dari GitHub
-│   └── deploy.sh                # Deploy wizard (DB, S3, Cloudflare)
-├── docs/
-│   ├── SRS.md                   # System Requirements Specification
-│   ├── PRD.md                   # Product Requirements Document
-│   ├── ARCHITECTURE.md          # Infra and app architecture notes
-│   └── tickets/
-│       ├── TASK-TEMPLATE.md
-│       └── bugs/
-│           └── BUG-TEMPLATE.md
-├── logs/                        # Auto-generated script logs
-├── .claude/
-│   ├── CLAUDE.md                # Global context untuk Claude Code
-│   └── agents/
-│       ├── PM.md                # PM session prompt
-│       ├── DEV.md               # DEV session prompt
-│       └── QA.md                # QA session prompt
-├── SESSION-PROMPTS.md           # Copy-paste prompts per session
-├── setup.sh                     # First time init
-├── sync.sh                      # Sync stack dari SRS ke CLAUDE.md
-├── Makefile
-└── .gitignore
-```
+log()   { local msg="[$TIMESTAMP] $1"; echo -e "${GREEN}[SYNC]${NC} $1"; echo "$msg" >> "$LOG_FILE"; }
+warn()  { local msg="[$TIMESTAMP] WARN: $1"; echo -e "${YELLOW}[WARN]${NC} $1"; echo "$msg" >> "$LOG_FILE"; }
+error() { local msg="[$TIMESTAMP] ERROR: $1"; echo -e "${RED}[ERROR]${NC} $1"; echo "$msg" >> "$LOG_FILE"; }
 
----
+mkdir -p logs
 
-## Quick Start
+# Check required files
+for f in "$SRS_FILE" "$PRD_FILE" "$CLAUDE_MD"; do
+  if [ ! -f "$f" ]; then
+    error "Missing: $f"
+    exit 1
+  fi
+done
 
-```bash
-cp -r project/ my-app/
-cd my-app/
-rm -rf .git && git init
-bash setup.sh
-```
+# Parse ## Stack section from SRS.md
+parse_stack() {
+  local file="$1"
+  awk '/^## Stack/{found=1; next} found && /^## /{exit} found{print}' "$file" \
+    | grep -E '^\s*-' \
+    | sed 's/^\s*-\s*//'
+}
 
-`setup.sh` mengisi nama project di CLAUDE.md dan opsional install Laravel 11 di code/.
+STACK_LINES=$(parse_stack "$SRS_FILE")
 
----
+if [ -z "$STACK_LINES" ]; then
+  warn "No ## Stack section found in $SRS_FILE. CLAUDE.md stack not updated."
+  exit 0
+fi
 
-## Workflow
+log "Parsed stack from $SRS_FILE:"
+echo "$STACK_LINES" | while read -r line; do
+  echo "  - $line"
+done
 
-### Setup awal
+# Build replacement block
+STACK_BLOCK="## Stack (auto-synced from SRS.md on $TIMESTAMP)"$'\n'
+while IFS= read -r line; do
+  STACK_BLOCK+="- $line"$'\n'
+done <<< "$STACK_LINES"
 
-```bash
-bash setup.sh
-```
+# Replace block between markers in CLAUDE.md
+perl -i -0pe "s/<!-- STACK_START -->.*?<!-- STACK_END -->/<!-- STACK_START -->\n${STACK_BLOCK}<!-- STACK_END -->/s" "$CLAUDE_MD"
 
-Buka PM session, tulis SRS dan PRD di docs/.
-
-```bash
-bash sync.sh
-```
-
-Sync stack dari docs/SRS.md ke .claude/CLAUDE.md. Jalankan ulang setiap kali SRS diupdate.
-
-Buka DEV session, ambil ticket dan build.
-
-Buka QA session, review dan generate bug prompt kalau ada issue.
-
-### Deploy ke EC2
-
-```bash
-bash scripts/update.sh      # pull latest, force overwrite
-sudo bash scripts/deploy.sh # deploy wizard
-```
-
-Atau pakai Makefile:
-
-```bash
-make update
-make deploy
-```
-
----
-
-## Claude Code Sessions
-
-Buka file agent yang sesuai sebagai opening prompt di Claude Code.
-File lengkap ada di SESSION-PROMPTS.md, tinggal copy paste.
-
-| Session | Prompt File | Edit Code | Buat Ticket | Review Code |
-|---------|-------------|-----------|-------------|-------------|
-| PM | .claude/agents/PM.md | Tidak | Ya | Tidak |
-| DEV | .claude/agents/DEV.md | Ya | Tidak | Tidak |
-| QA | .claude/agents/QA.md | Tidak | Bug only | Ya |
-
----
-
-## Session Keywords
-
-| Keyword | Mode | Meaning |
-|---------|------|---------|
-| gimana? | Discuss | Open discussion, no action |
-| wdyt? | Discuss | Minta opini atau rekomendasi |
-| worth it? | Discuss | Evaluasi trade-off |
-| review | Discuss | Feedback apa yang sudah ada |
-| elaborate | Clarify | Jelasin lebih detail |
-| tldr | Clarify | Ringkas singkat |
-| gas / lanjut | Execute | Proceed sekarang |
-| do it | Execute | Sama dengan gas |
-| ship it | Execute | Final, no more changes |
-| skip | Control | Lewati bagian ini |
-| hold | Control | Stop, tunggu instruksi |
-| undo | Control | Revert perubahan terakhir |
-
----
-
-## Ticket Flow
-
-```
-PM buat TASK-XXX.md (Status: Open)
-  -> DEV isi DEV Response, coding (Status: In Progress)
-  -> DEV selesai (Status: In Review)
-  -> QA isi QA Response, cek (Status: Done / buat BUG-XXX)
-  -> Kalau bug: QA generate DEV prompt, DEV fix (Status: Open)
-```
-
-Ticket: docs/tickets/TASK-XXX.md
-Bug: docs/tickets/bugs/BUG-XXX.md
-
----
-
-## sync.sh: Format Stack di SRS.md
-
-sync.sh membaca section `## Stack` dari docs/SRS.md. Format harus konsisten:
-
-```md
-## Stack
-
-- Backend: Laravel 11, PostgreSQL
-- Frontend: React + Vite
-- Database: PostgreSQL 16
-- Infra: EC2, RDS, Cloudflare R2, Cloudflare Tunnel
-```
-
----
-
-## Scripts Reference
-
-| Script | Command | Fungsi |
-|--------|---------|--------|
-| setup.sh | `bash setup.sh` | Init project, set nama, opsional install Laravel |
-| sync.sh | `bash sync.sh` | Sync stack SRS ke CLAUDE.md |
-| scripts/update.sh | `bash scripts/update.sh` | Pull latest dari GitHub, force overwrite |
-| scripts/deploy.sh | `sudo bash scripts/deploy.sh` | Full deploy wizard di EC2 |
-
----
-
-## Requirements
-
-| Tool | Dibutuhkan Untuk |
-|------|-----------------|
-| git | update.sh |
-| composer | setup.sh (Laravel install) |
-| systemd | deploy.sh (service management) |
-| mysql atau psql | deploy.sh (DB connection test) |
-| aws cli | deploy.sh (S3/R2 test) |
-| cloudflared | deploy.sh (auto-install jika belum ada) |
-| curl | deploy.sh (health check) |
-| perl | sync.sh (CLAUDE.md replacement) |
+log "CLAUDE.md updated."
+log "Sync log: $LOG_FILE"
