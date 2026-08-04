@@ -44,42 +44,65 @@ project/
 
 ---
 
-## Quick start
+## How to use this
+
+### 1. Create your project from the blueprint
 
 ```bash
-cp -r project/ my-app/
+cp -r blueprint-laravel/ my-app/
 cd my-app/
 rm -rf .git && git init
 bash setup.sh
 ```
 
-`setup.sh` fills in the project name in `CLAUDE.md` and creates `code/`.
+`setup.sh` asks for a project name, fills it into `CLAUDE.md`, and creates `code/`. This is a one-time step.
 
----
+### 2. Describe what you're building
 
-## Workflow
+Write `docs/SRS.md` (requirements) and `docs/PRD.md` (product/features) for your actual project — you don't have to do this alone, open Claude Code and ask it to help draft them:
 
-```bash
-bash setup.sh
+```
+Read docs/SRS.md and docs/PRD.md and help me fill these in for: [describe your project]
 ```
 
-Write `docs/SRS.md` and `docs/PRD.md` for the project you're actually building.
+Then sync the stack into `CLAUDE.md`:
 
 ```bash
 bash sync.sh
 ```
 
-Syncs the `## Stack` section from `docs/SRS.md` into `CLAUDE.md`. Re-run whenever the SRS stack changes.
+Re-run `sync.sh` any time the `## Stack` section of `SRS.md` changes.
 
-From there, work task by task:
+### 3. Work task by task in Claude Code
 
-1. Non-trivial change? Use Plan Mode (`.claude/commands/plan-feature.md`) — read-only exploration, write a plan, get it approved, then implement.
-2. Bug? Run the investigator agent first (`.claude/agents/investigator-agent.md`) for root cause before writing a fix.
-3. Before committing: `/pre-commit` — parallel specialist review.
-4. After finishing: append an entry to `DECISION-LOG.md`. If it closed something in `SCRATCHPAD.md`, move it to `ARCHIVE.md` immediately.
-5. Every 1-2 weeks: `/retrospective` to turn recurring patterns into rule updates.
+Start Claude Code in the project root (`claude`). `CLAUDE.md` loads automatically — it's short by design, and just routes to the right rule file for whatever you're doing (see [Folder structure](#folder-structure) below).
 
-Start a new session by reading `SCRATCHPAD.md` plus the last 5 entries of `DECISION-LOG.md` — no re-onboarding needed.
+Normal loop for one task:
+
+1. **Describe the change.** For anything non-trivial (new feature, multi-file change, unclear scope), ask Claude to use Plan Mode, or just say `/plan-feature`. It explores read-only, writes a plan, and waits for your approval — nothing gets edited until you approve.
+2. **Approve or adjust the plan.**
+3. **Claude implements.** Every time it finishes a turn, the `Stop` hook (`stop-verify.ps1`) automatically runs typecheck/build/test on whatever's in `code/` and self-corrects on failure — you don't have to ask for this, it's enforced.
+4. **Before committing, run `/pre-commit`.** It spawns the designer/engineer/marketer agents in parallel on the changed files (each auto-skips if its domain wasn't touched) and reports findings before you commit.
+5. **Claude logs the task.** It appends a structured entry to `DECISION-LOG.md`, and if it closed something tracked in `SCRATCHPAD.md`, moves it to `ARCHIVE.md` in the same turn.
+6. **You commit normally with git.**
+
+### 4. Fixing a bug
+
+Just describe the bug. `CLAUDE.md`'s routing table sends Claude to `.claude/agents/investigator-agent.md` first — a read-only root-cause pass — before it writes any fix. This is what stops symptom-patching.
+
+### 5. Resuming a later session
+
+Say:
+
+```
+Read SCRATCHPAD.md and the last 5 entries of DECISION-LOG.md, then continue.
+```
+
+Claude picks up exactly where it left off. No need to re-explain context — that's the whole point of logging as you go.
+
+### 6. Every 1-2 weeks
+
+Run `/retrospective`. Claude reads recent `DECISION-LOG.md` entries, looks for anything that repeated 3+ times, and proposes concrete edits to `.claude/rules/*.md` for your approval — this is what makes the rules get sharper over time instead of staying static.
 
 ---
 
