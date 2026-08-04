@@ -37,7 +37,7 @@ done
 parse_stack() {
   local file="$1"
   awk '/^## Stack/{found=1; next} found && /^## /{exit} found{print}' "$file" \
-    | grep -E '^\s*-' \
+    | grep -E '^\s*-\s' \
     | sed 's/^\s*-\s*//'
 }
 

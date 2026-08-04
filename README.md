@@ -37,9 +37,9 @@ project/
 ├── DECISION-LOG.md              # every finished task, structured
 ├── SCRATCHPAD.md                # open work only — not a memory store
 ├── ARCHIVE.md                   # one-liner per finished task
-├── logs/                        # sync.sh output
-├── setup.sh                     # first-time init
-└── sync.sh                      # sync docs/SRS.md Stack section into CLAUDE.md
+├── logs/                        # sync output
+├── setup.sh / setup.ps1         # first-time init (bash / native Windows)
+└── sync.sh / sync.ps1           # sync docs/SRS.md Stack section into CLAUDE.md (bash / native Windows)
 ```
 
 ---
@@ -48,6 +48,8 @@ project/
 
 ### 1. Create your project from the blueprint
 
+macOS/Linux (or Git Bash/WSL on Windows):
+
 ```bash
 cp -r blueprint-laravel/ my-app/
 cd my-app/
@@ -55,7 +57,17 @@ rm -rf .git && git init
 bash setup.sh
 ```
 
-`setup.sh` asks for a project name, fills it into `CLAUDE.md`, and creates `code/`. This is a one-time step.
+Windows (native PowerShell, no Git Bash/WSL needed):
+
+```powershell
+Copy-Item blueprint-laravel my-app -Recurse
+Set-Location my-app
+Remove-Item -Recurse -Force .git
+git init
+powershell -File setup.ps1
+```
+
+`setup.sh`/`setup.ps1` ask for a project name, fill it into `CLAUDE.md`, and create `code/`. This is a one-time step. They're functionally identical — use whichever matches your shell.
 
 ### 2. Describe what you're building
 
@@ -68,10 +80,13 @@ Read docs/SRS.md and docs/PRD.md and help me fill these in for: [describe your p
 Then sync the stack into `CLAUDE.md`:
 
 ```bash
-bash sync.sh
+bash sync.sh          # macOS/Linux/Git Bash/WSL
+```
+```powershell
+powershell -File sync.ps1   # native Windows
 ```
 
-Re-run `sync.sh` any time the `## Stack` section of `SRS.md` changes.
+Re-run whichever one matches your shell any time the `## Stack` section of `SRS.md` changes.
 
 ### 3. Work task by task in Claude Code
 
@@ -134,13 +149,17 @@ Three PowerShell hooks registered in `.claude/settings.local.json`:
 
 | Script | Command | Purpose |
 |--------|---------|---------|
-| setup.sh | `bash setup.sh` | Init project, set name, create `code/` |
-| sync.sh | `bash sync.sh` | Sync Stack section from `docs/SRS.md` into `CLAUDE.md` |
+| setup.sh | `bash setup.sh` | Init project, set name, create `code/` (macOS/Linux/Git Bash/WSL) |
+| setup.ps1 | `powershell -File setup.ps1` | Same, native Windows |
+| sync.sh | `bash sync.sh` | Sync Stack section from `docs/SRS.md` into `CLAUDE.md` (macOS/Linux/Git Bash/WSL) |
+| sync.ps1 | `powershell -File sync.ps1` | Same, native Windows |
+
+Both pairs are functionally identical (same prompts, same output, same `CLAUDE.md` edits) — pick the one matching your shell. Don't run both in the same project; either works standalone.
 
 ## Requirements
 
 | Tool | Needed for |
 |------|-----------|
 | git | git-context-inject hook, general workflow |
-| pwsh (PowerShell 7+) | running the hooks |
-| perl | sync.sh (CLAUDE.md replacement) |
+| pwsh or Windows PowerShell 5.1+ | running the hooks, and `setup.ps1`/`sync.ps1` on native Windows |
+| perl | `sync.sh` only (CLAUDE.md replacement) — not needed if using `sync.ps1` |
