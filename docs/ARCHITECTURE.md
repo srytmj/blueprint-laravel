@@ -8,12 +8,12 @@ Last Updated: [Date]
 ## Infrastructure Diagram
 
 ```
-[User] -> [Cloudflare Tunnel] -> [EC2: Nginx + php-fpm]
-                                        |
-                              [RDS: PostgreSQL]
-                                        |
-                              [Cloudflare R2 / S3]
+[Client] -> [App server] -> [Data store]
+                   |
+             [File storage / external services]
 ```
+
+Replace with your actual infra once decided.
 
 ---
 
@@ -21,26 +21,17 @@ Last Updated: [Date]
 
 | Service | Role |
 |---------|------|
-| EC2 | App server |
-| RDS | Database |
-| Cloudflare Tunnel | Public HTTPS access |
-| R2 / S3 | File storage |
+| [e.g. app server] | [what it does] |
+| [e.g. database] | [what it does] |
+| [e.g. CDN/proxy] | [what it does] |
 
 ---
 
-## App Structure (Laravel)
+## App Structure
 
 ```
 code/
-├── app/
-│   ├── Http/Controllers/
-│   ├── Models/
-│   └── Services/        # business logic goes here
-├── routes/
-├── database/
-│   ├── migrations/
-│   ├── seeders/
-│   └── factories/
+├── [source layout specific to your chosen stack]
 └── ...
 ```
 
@@ -48,8 +39,8 @@ code/
 
 ## Key Decisions
 
-- [e.g. Using Sanctum for API auth because stateless SPA]
-- [e.g. Queue via database driver, upgrade to Redis if needed]
+- [e.g. why this datastore, why this auth approach]
+- [e.g. why this deployment target]
 
 ---
 
@@ -59,6 +50,4 @@ Key env vars and where they come from.
 
 | Key | Source |
 |-----|--------|
-| DB_HOST | RDS endpoint |
-| AWS_BUCKET | R2 bucket name |
-| CF_TUNNEL_URL | Cloudflare dashboard |
+| [e.g. DB_HOST] | [e.g. hosting provider dashboard] |

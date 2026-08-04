@@ -1,23 +1,18 @@
-# Deploy config (contains credentials)
-.deploy.conf
-.update.conf
-
 # Logs
 logs/
 
-# Env backups
+# Secrets / env
+.env
+.env.*
 code/.env
-code/.env.backup.*
+code/.env.*
 
-# Laravel
-code/vendor/
+# Common dependency/build dirs (harmless if unused for your stack)
 code/node_modules/
-code/.env
-code/storage/logs/
-code/storage/framework/cache/
-code/storage/framework/sessions/
-code/storage/framework/views/
-code/bootstrap/cache/
+code/vendor/
+code/dist/
+code/build/
+code/.venv/
 
 # OS
 .DS_Store

@@ -3,14 +3,14 @@
 # =============================================================
 # sync.sh - Sync stack info from SRS/PRD into CLAUDE.md
 # Usage: bash sync.sh
-# Run after PM session updates docs/SRS.md or docs/PRD.md
+# Run after updating docs/SRS.md or docs/PRD.md
 # =============================================================
 
 set -euo pipefail
 
 SRS_FILE="docs/SRS.md"
 PRD_FILE="docs/PRD.md"
-CLAUDE_MD=".claude/CLAUDE.md"
+CLAUDE_MD="CLAUDE.md"
 LOG_FILE="logs/sync.log"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 

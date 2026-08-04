@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-CLAUDE_MD=".claude/CLAUDE.md"
+CLAUDE_MD="CLAUDE.md"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
 
 GREEN='\033[0;32m'
@@ -39,26 +39,14 @@ sed -i "s|{SETUP_DATE}|$TIMESTAMP|g" "$CLAUDE_MD"
 
 log "Project name set: $PROJECT_NAME"
 
-# Optional: init Laravel in code/
-echo ""
-read -rp "Install fresh Laravel 11 in code/? (y/n): " install_laravel
-if [[ "$install_laravel" =~ ^[Yy]$ ]]; then
-  if command -v composer &>/dev/null; then
-    log "Running composer create-project..."
-    composer create-project laravel/laravel code --prefer-dist
-    log "Laravel installed in code/"
-  else
-    warn "composer not found. Install Laravel manually: composer create-project laravel/laravel code"
-  fi
-else
-  log "Skipping Laravel install. Put your code in code/"
-fi
+mkdir -p code
+log "code/ ready. Put your source in there, in whatever stack you're using."
 
 echo ""
 log "Setup complete."
 log "Next steps:"
-echo "  1. Open PM session: use .claude/agents/PM.md as system prompt"
-echo "  2. Write SRS and PRD in docs/"
-echo "  3. Run: bash sync.sh"
-echo "  4. Open DEV session: use .claude/agents/DEV.md as system prompt"
+echo "  1. Write docs/SRS.md and docs/PRD.md."
+echo "  2. Run: bash sync.sh (syncs docs/SRS.md Stack section into CLAUDE.md)"
+echo "  3. Start working task by task, Plan Mode first for anything non-trivial."
+echo "  4. See SCRATCHPAD.md for open work, DECISION-LOG.md for the history."
 echo ""

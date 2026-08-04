@@ -14,10 +14,10 @@ Last Updated: [Date]
 
 ## Stack
 
-- Backend: [e.g. Laravel 11, PostgreSQL]
-- Frontend: [e.g. React + Vite, Alpine.js]
-- Database: [e.g. PostgreSQL 16]
-- Infra: [e.g. EC2, RDS, Cloudflare R2, Cloudflare Tunnel]
+- Backend: [e.g. your backend language/framework]
+- Frontend: [e.g. your frontend framework, or "none"]
+- Database: [e.g. your datastore and version]
+- Infra: [e.g. your hosting/deploy target]
 
 ---
 
@@ -39,17 +39,17 @@ Last Updated: [Date]
 
 ## Non-Functional Requirements
 
-- Performance: [e.g. API response < 500ms]
-- Security: [e.g. auth via Sanctum, rate limiting]
-- Scalability: [e.g. stateless app, horizontal scaling ready]
-- Availability: [e.g. 99.9% uptime]
+- Performance: [e.g. response time targets]
+- Security: [e.g. auth method, rate limiting]
+- Scalability: [e.g. scaling strategy]
+- Availability: [e.g. uptime target]
 
 ---
 
 ## Constraints
 
-- [e.g. must run on single EC2 t3.medium]
-- [e.g. no paid third-party services except AWS]
+- [e.g. hosting/budget/compliance constraints]
+- [e.g. allowed/disallowed third-party services]
 
 ---
 

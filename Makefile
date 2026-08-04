@@ -1,12 +1,10 @@
-.PHONY: setup sync update deploy help
+.PHONY: setup sync help
 
 help:
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make setup    First time setup (name project, optional Laravel install)"
-	@echo "  make sync     Sync stack from SRS/PRD into CLAUDE.md"
-	@echo "  make update   Pull latest code from GitHub (force overwrite)"
-	@echo "  make deploy   Run full deploy wizard (DB, S3, Cloudflare, services)"
+	@echo "  make setup    First time setup (name the project, create code/)"
+	@echo "  make sync     Sync Stack section from docs/SRS.md into CLAUDE.md"
 	@echo ""
 
 setup:
@@ -14,9 +12,3 @@ setup:
 
 sync:
 	bash sync.sh
-
-update:
-	bash scripts/update.sh
-
-deploy:
-	sudo bash scripts/deploy.sh
